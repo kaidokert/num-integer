@@ -17,9 +17,9 @@
 #![doc(html_root_url = "https://docs.rs/num-integer/0.1")]
 #![no_std]
 
-use num_traits::{PrimInt, Signed};
+use num_traits::{PrimInt, Signed, Unsigned};
 
-pub trait Integer: PrimInt + Signed {
+pub trait Integer: PrimInt {
     /// Floored integer division.
     ///
     /// # Examples
@@ -348,9 +348,43 @@ pub fn gcd_lcm<T: Integer>(x: T, y: T) -> (T, T) {
     x.gcd_lcm(&y)
 }
 
+trait Abs: PrimInt {
+    fn abs(&self) -> Self;
+    fn signum(&self) -> Self;
+    fn is_negative(&self) -> bool;
+    fn is_positive(&self) -> bool;
+}
+impl<T> Abs for T
+where
+    T: PrimInt,
+{
+    fn abs(&self) -> Self {
+        if self.is_negative() {
+            T::zero() - *self
+        } else {
+            *self
+        }
+    }
+    fn signum(&self) -> Self {
+        if self.is_positive() {
+            T::one()
+        } else if self.is_negative() {
+            T::zero() - T::one()
+        } else {
+            T::zero()
+        }
+    }
+    fn is_negative(&self) -> bool {
+        *self < T::zero()
+    }
+    fn is_positive(&self) -> bool {
+        *self > T::zero()
+    }
+}
+
 impl<T> Integer for T
 where
-    T: PrimInt + Signed,
+    T: PrimInt + Abs,
 {
     /// Floored integer division
     fn div_floor(&self, other: &Self) -> Self {
